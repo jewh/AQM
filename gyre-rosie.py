@@ -1,6 +1,7 @@
 import numpy as np 
 import matplotlib.pyplot as plt   
-import scipy.linalg as sp    
+import scipy.linalg as sp
+from mpl_toolkits.mplot3d import Axes3D    
         
 class Gyre:
         
@@ -75,7 +76,14 @@ class Gyre:
         
         x = np.arange(0, self.W+self.dx, self.dx)/1000
         y = np.arange(0, self.L+self.dy, self.dy)/1000
-        
+        # adding in 3D surface plot
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.plot_surface(X=x, Y=y, Z=sol_matrix)
+        plt.savefig("surface.png")
+        plt.show()
+
+        # contour plot
         fig,ax = plt.subplots()
         plt.contourf(x,y,sol_matrix)
         plt.xlabel('x (km)')
@@ -84,6 +92,7 @@ class Gyre:
         cbar = plt.colorbar()
         cbar.set_label('$\psi$')
         plt.show()
+        plt.savefig("contour.png") # for the WSL users
         
     def plot_curl(self):
         
