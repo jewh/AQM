@@ -106,7 +106,14 @@ class Gyre:
                     
         x = np.arange(0, self.W+self.dx, self.dx)/1000
         y = np.arange(0, self.L+self.dy, self.dy)/1000
+
+        # adding in 3D surface plot
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.plot_surface(x,y,curl)
+        plt.show()
         
+        # and now plot contours
         fig,ax = plt.subplots()
         plt.contourf(x,y,curl)
         plt.xlabel('x (km)')
@@ -120,8 +127,8 @@ class Gyre:
 def curl_tau(x,y,W,L,tau_0):
     return ((tau_0*2*np.pi)/L)*np.sin((2*np.pi*y)/L)
          
-test_gyre = Gyre(2e-11, 1000, 1000, curl_tau, 1, 2e-5, 10**6, 10**6, 100, 100)
-#test_gyre.plot_curl()
+test_gyre = Gyre(2e-11, 1000, 1000, curl_tau, 1, 2e-5, 10**6, 10**6, 50, 50)
+test_gyre.plot_curl()
 test_gyre.solve()
 
 
