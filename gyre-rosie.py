@@ -76,11 +76,17 @@ class Gyre:
         
         x = np.arange(0, self.W+self.dx, self.dx)/1000
         y = np.arange(0, self.L+self.dy, self.dy)/1000
+
         # adding in 3D surface plot
+        X,Y = np.meshgrid(x, y) # don't know why it needs meshgrid axes but for some reason it does
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        ax.plot_surface(X=x, Y=y, Z=sol_matrix)
-        plt.savefig("surface.png")
+        ax.plot_surface(X,Y,sol_matrix, rstride=1, cstride=1,
+                cmap='viridis', edgecolor='none')
+        ax.set_xlabel("$x$")
+        ax.set_ylabel("$y$")
+        ax.set_zlabel("$\psi (x,y)$")
+        ax.set_title(r"Ocean Gyre for $\tau^{x} (x, y) = cos(2 \pi n y / L)$," + f"\n r = {self.r}")
         plt.show()
 
         # contour plot
@@ -92,7 +98,6 @@ class Gyre:
         cbar = plt.colorbar()
         cbar.set_label('$\psi$')
         plt.show()
-        plt.savefig("contour.png") # for the WSL users
         
     def plot_curl(self):
         
@@ -106,11 +111,12 @@ class Gyre:
                     
         x = np.arange(0, self.W+self.dx, self.dx)/1000
         y = np.arange(0, self.L+self.dy, self.dy)/1000
-
         # adding in 3D surface plot
+        X, Y = np.meshgrid(x, y)
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        ax.plot_surface(x,y,curl)
+        ax.plot_surface(X,Y,curl, rstride=1, cstride=1,
+                cmap='viridis', edgecolor='none')
         plt.show()
         
         # and now plot contours
@@ -127,8 +133,8 @@ class Gyre:
 def curl_tau(x,y,W,L,tau_0):
     return ((tau_0*2*np.pi)/L)*np.sin((2*np.pi*y)/L)
          
-test_gyre = Gyre(2e-11, 1000, 1000, curl_tau, 1, 2e-5, 10**6, 10**6, 50, 50)
-test_gyre.plot_curl()
+test_gyre = Gyre(beta=2e-11, rho_0=1000, H=1000, curl_tau=curl_tau, tau_0=1, r=2e-5, W=10**6, L=10**6, m=50, n=50)
+# test_gyre.plot_curl()
 test_gyre.solve()
 
 
