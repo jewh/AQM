@@ -19,6 +19,8 @@ class Gyre:
         self.lhs = []
         self.dx = self.W/self.m
         self.dy = self.L/self.n
+        self.sol = []
+        self.sol_matrix = []
         
     def get_lhs(self): # without wind stress for now 
         
@@ -40,8 +42,34 @@ class Gyre:
                 matrix[x][x] = B
                 matrix[x][x-1] = D
                 matrix[x][x+1] = D
-                matrix[x][x-(self.m+1)] = C
-                matrix[x][x+(self.m+1)] = A
+                matrix[x][x-(self.n+1)] = C
+                matrix[x][x+(self.n+1)] = A
+                
+        self.lhs = matrix
+        
+    def get_lhs_periodic(self): # without wind stress for now 
+        
+        A = self.beta/self.dx - (self.r)/(self.dx**2)
+        B = -self.beta/self.dx + (2*self.r)/(self.dx**2) + (2*self.r)/(self.dy**2)
+        C = -self.r/(self.dx**2)
+        D = -self.r/(self.dy**2)
+        
+        size = (self.n+1)*(self.m+1)
+        matrix = np.zeros((size,size))
+
+        for x in range(len(matrix)): # run through rows of matrix
+            i = x%(self.n+1) # y
+            j = (x-i)/(self.n+1) # x
+            
+            if i==0 or i==self.n:
+                matrix[x][x] = 1
+                
+            else:
+                matrix[x][x] = B
+                matrix[x][(x-1)%size] = D
+                matrix[x][(x+1)%size] = D
+                matrix[x][(x-(self.n+1))%size] = C
+                matrix[x][(x+(self.n+1))%size] = A
                 
         self.lhs = matrix
         
@@ -65,19 +93,26 @@ class Gyre:
         self.rhs = vector
         
                    
-    def solve(self):
+    def solve(self, bc):
         
-        self.get_lhs()
+        if bc=='BC':
+            self.get_lhs()
+        elif bc=='periodic':
+            self.get_lhs_periodic()
+        
         self.get_rhs()
         
-        sol = sp.solve(self.lhs,self.rhs)              
-        sol_matrix = np.transpose(sol.reshape((self.n+1,self.m+1)))
+        sol = sp.solve(self.lhs,self.rhs)   
+        self.sol = sol           
+        sol_matrix = np.transpose(np.flip(sol.reshape((self.n+1,self.m+1)),0))
+        self.sol_matrix = sol_matrix
         
-        x = np.arange(0, self.W+self.dx, self.dx)/1000
-        y = np.arange(0, self.L+self.dy, self.dy)/1000
+        x = np.arange(0, self.W+self.dx/2, self.dx)/1000
+        y = np.arange(0, self.L+self.dy/2, self.dy)/1000
+    
         
         fig,ax = plt.subplots()
-        plt.contourf(x,y,sol_matrix)
+        plt.contourf(y,x,sol_matrix)
         plt.xlabel('x (km)')
         plt.ylabel('y (km)')
         ax.set_aspect(1)
@@ -109,11 +144,10 @@ class Gyre:
             
  
 def curl_tau(x,y,W,L,tau_0):
-    return ((tau_0*2*np.pi)/L)*np.sin((2*np.pi*y)/L)
+    return -((tau_0*2*np.pi)/L)*np.sin((2*np.pi*y)/L)
          
-test_gyre = Gyre(2e-11, 1000, 1000, curl_tau, 1, 2e-5, 10**6, 10**6, 100, 100)
-#test_gyre.plot_curl()
-test_gyre.solve()
+test_gyre = Gyre(2e-11, 1000, 1000, curl_tau, 1, 1e-6, 10**6, 10**6, 100, 100)
+test_gyre.solve('BC')
 
 
             
