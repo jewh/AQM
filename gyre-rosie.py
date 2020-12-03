@@ -125,14 +125,14 @@ class Gyre:
         # contour plot
         fig,ax = plt.subplots()
         plt.contour(x,y,sol_matrix, cmap='RdBu')
-        ax.quiver(600,730,0,10)
-        ax.quiver(600,230,0,-10)
+        ax.quiver(600,730,0,-10)
+        ax.quiver(600,230,0,10)
         plt.xlabel('x (km)')
         plt.ylabel('y (km)')
         ax.set_aspect(1)
         cbar = plt.colorbar()
         cbar.set_label('$\psi$')
-        plt.show()
+        #plt.show()
         
     def plot_curl(self):
         
@@ -171,6 +171,8 @@ def curl_tau(x,y,W,L,tau_0):
 
 test_gyre = Gyre(beta=2e-11, rho_0=1000, H=1000, curl_tau=curl_tau, tau_0=1, r=2e-7, W=10**6, L=10**6, n=100, m=100)
 test_gyre.solve('BC')
+
+
 
 
 
