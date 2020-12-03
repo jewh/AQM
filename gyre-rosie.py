@@ -1,6 +1,7 @@
 import numpy as np 
 import matplotlib.pyplot as plt   
-import scipy.linalg as sp    
+import scipy.linalg as sp
+from mpl_toolkits.mplot3d import Axes3D    
         
 class Gyre:
         
@@ -24,10 +25,10 @@ class Gyre:
         
     def get_lhs(self): # without wind stress for now 
         
-        A = self.beta/self.dx - (self.r)/(self.dx**2)
-        B = -self.beta/self.dx + (2*self.r)/(self.dx**2) + (2*self.r)/(self.dy**2)
-        C = -self.r/(self.dx**2)
-        D = -self.r/(self.dy**2)
+        A = self.beta/self.dx + (self.r)/(self.dx**2)
+        B = -self.beta/self.dx - (2*self.r)/(self.dx**2) - (2*self.r)/(self.dy**2)
+        C = self.r/(self.dx**2)
+        D = self.r/(self.dy**2)
         
         matrix = np.zeros(((self.n+1)*(self.m+1),(self.n+1)*(self.m+1)))
 
@@ -107,10 +108,23 @@ class Gyre:
         sol_matrix = np.transpose(np.flip(sol.reshape((self.n+1,self.m+1)),0))
         self.sol_matrix = sol_matrix
         
-        x = np.arange(0, self.W+self.dx/2, self.dx)/1000
-        y = np.arange(0, self.L+self.dy/2, self.dy)/1000
-    
-        
+
+        x = np.arange(0, self.W+self.dx, self.dx)/1000
+        y = np.arange(0, self.L+self.dy, self.dy)/1000
+
+        # adding in 3D surface plot
+        X,Y = np.meshgrid(x, y) # don't know why it needs meshgrid axes but for some reason it does
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.plot_surface(X,Y,sol_matrix, rstride=1, cstride=1,
+                cmap='viridis', edgecolor='none')
+        ax.set_xlabel("x (km)")
+        ax.set_ylabel("y (km)")
+        ax.set_zlabel("$\psi (x,y)$")
+        ax.set_title(r"Ocean Gyre for $\tau^{x} (x, y) = cos(2 \pi n y / L)$," + f"\n r = {self.r}")
+        plt.show()
+
+        # contour plot
         fig,ax = plt.subplots()
         plt.contour(y,x,sol_matrix, cmap='RdBu')
         ax.quiver(700,730,0,10)
@@ -134,7 +148,15 @@ class Gyre:
                     
         x = np.arange(0, self.W+self.dx, self.dx)/1000
         y = np.arange(0, self.L+self.dy, self.dy)/1000
+        # adding in 3D surface plot
+        X, Y = np.meshgrid(x, y)
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.plot_surface(X,Y,curl, rstride=1, cstride=1,
+                cmap='viridis', edgecolor='none')
+        plt.show()
         
+        # and now plot contours
         fig,ax = plt.subplots()
         plt.contourf(x,y,curl)
         plt.xlabel('x (km)')
@@ -148,8 +170,10 @@ class Gyre:
 def curl_tau(x,y,W,L,tau_0):
     return -((tau_0*2*np.pi)/L)*np.sin((2*np.pi*y)/L)
          
-test_gyre = Gyre(2e-11, 1000, 1000, curl_tau, 1, 1e-6, 10**6, 10**6, 50, 50)
+
+test_gyre = Gyre(beta=2e-11, rho_0=1000, H=1000, curl_tau=curl_tau, tau_0=1, r=2e-8, W=10**6, L=10**6, n=50, m=50)
 test_gyre.solve('BC')
+
 
 
             
