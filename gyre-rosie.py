@@ -50,10 +50,10 @@ class Gyre:
         
     def get_lhs_periodic(self): # without wind stress for now 
         
-        A = self.beta/self.dx - (self.r)/(self.dx**2)
-        B = -self.beta/self.dx + (2*self.r)/(self.dx**2) + (2*self.r)/(self.dy**2)
-        C = -self.r/(self.dx**2)
-        D = -self.r/(self.dy**2)
+        A = self.beta/self.dx + (self.r)/(self.dx**2)
+        B = -self.beta/self.dx - (2*self.r)/(self.dx**2) - (2*self.r)/(self.dy**2)
+        C = self.r/(self.dx**2)
+        D = self.r/(self.dy**2)
         
         size = (self.n+1)*(self.m+1)
         matrix = np.zeros((size,size))
@@ -103,17 +103,15 @@ class Gyre:
         
         self.get_rhs()
         
-        sol = sp.solve(self.lhs,self.rhs)   
-        self.sol = sol           
-        sol_matrix = np.transpose(np.flip(sol.reshape((self.n+1,self.m+1)),0))
-        self.sol_matrix = sol_matrix
+        sol = sp.solve(self.lhs,self.rhs)             
+        sol_matrix = np.transpose(sol.reshape((self.n+1,self.m+1)))
         
 
         x = np.arange(0, self.W+self.dx, self.dx)/1000
         y = np.arange(0, self.L+self.dy, self.dy)/1000
 
         # adding in 3D surface plot
-        X,Y = np.meshgrid(x, y) # don't know why it needs meshgrid axes but for some reason it does
+        '''X,Y = np.meshgrid(x, y) # don't know why it needs meshgrid axes but for some reason it does
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         ax.plot_surface(X,Y,sol_matrix, rstride=1, cstride=1,
@@ -122,13 +120,13 @@ class Gyre:
         ax.set_ylabel("y (km)")
         ax.set_zlabel("$\psi (x,y)$")
         ax.set_title(r"Ocean Gyre for $\tau^{x} (x, y) = cos(2 \pi n y / L)$," + f"\n r = {self.r}")
-        plt.show()
+        plt.show()'''
 
         # contour plot
         fig,ax = plt.subplots()
-        plt.contour(y,x,sol_matrix, cmap='RdBu')
-        ax.quiver(700,730,0,10)
-        ax.quiver(700,230,0,-10)
+        plt.contour(x,y,sol_matrix, cmap='RdBu')
+        ax.quiver(600,730,0,10)
+        ax.quiver(600,230,0,-10)
         plt.xlabel('x (km)')
         plt.ylabel('y (km)')
         ax.set_aspect(1)
@@ -171,7 +169,7 @@ def curl_tau(x,y,W,L,tau_0):
     return -((tau_0*2*np.pi)/L)*np.sin((2*np.pi*y)/L)
          
 
-test_gyre = Gyre(beta=2e-11, rho_0=1000, H=1000, curl_tau=curl_tau, tau_0=1, r=2e-8, W=10**6, L=10**6, n=50, m=50)
+test_gyre = Gyre(beta=2e-11, rho_0=1000, H=1000, curl_tau=curl_tau, tau_0=1, r=2e-7, W=10**6, L=10**6, n=100, m=100)
 test_gyre.solve('BC')
 
 
