@@ -2,7 +2,18 @@ import numpy as np
 import matplotlib.pyplot as plt   
 import scipy.linalg as sp
 from mpl_toolkits.mplot3d import Axes3D    
-        
+
+def get_directions(sol_matrix, x, y):
+    # this is to get the horizontal and vertical components for visualising with streamplot()
+    # approximate dpsi/dx and dpsi/dy with forward euler
+    u = np.zeros((len(x), len(y)), dtype=float)
+    v = np.zeros((len(x), len(y)), dtype=float)
+    for j in range(0, len(y)-1):
+        for i in range(0, len(x)-1):
+            v[i, j] = -(sol_matrix[i+1, j] - sol_matrix[i, j]) / (x[i+1]-x[i])
+            u[i, j] = (sol_matrix[i, j+1] - sol_matrix[i, j]) / (y[i+1]-y[i])
+    return u, v
+
 class Gyre:
         
     def __init__(self, beta, rho_0, H, curl_tau, tau_0, r, W, L, n, m):
@@ -105,7 +116,6 @@ class Gyre:
         
         sol = sp.solve(self.lhs,self.rhs)             
         sol_matrix = np.transpose(sol.reshape((self.n+1,self.m+1)))
-        
 
         x = np.arange(0, self.W+self.dx, self.dx)/1000
         y = np.arange(0, self.L+self.dy, self.dy)/1000
@@ -122,11 +132,17 @@ class Gyre:
         ax.set_title(r"Ocean Gyre for $\tau^{x} (x, y) = cos(2 \pi n y / L)$," + f"\n r = {self.r}")
         plt.show()'''
 
+
         # contour plot
         fig,ax = plt.subplots()
-        plt.contour(x,y,sol_matrix, cmap='RdBu')
-        ax.quiver(600,730,0,-10)
-        ax.quiver(600,230,0,10)
+        plt.contour(x,y,sol_matrix, cmap='RdBu', levels=15)
+        # Want to make a streamplot in the background
+        # So calculate the direction vectors u, v
+        u, v = get_directions(sol_matrix, x, y)
+        # now streamplot, behind the contours
+        ax.streamplot(x, y, u, v, color='0.8', density=2)
+        ax.quiver(18,733,0,-1)
+        ax.quiver(18,281,0,1)
         plt.xlabel('x (km)')
         plt.ylabel('y (km)')
         ax.set_aspect(1)
@@ -152,25 +168,27 @@ class Gyre:
         ax = fig.add_subplot(111, projection='3d')
         ax.plot_surface(X,Y,curl, rstride=1, cstride=1,
                 cmap='viridis', edgecolor='none')
-        plt.show()
+
         
-        # and now plot contours
-        fig,ax = plt.subplots()
-        plt.contourf(x,y,curl)
-        plt.xlabel('x (km)')
-        plt.ylabel('y (km)')
-        ax.set_aspect(1)
-        cbar = plt.colorbar()
-        cbar.set_label('curl $\\tau$')
-        plt.show()
+        # # and now plot contours
+        # fig,ax = plt.subplots()
+        # plt.contourf(x,y,curl)
+        # plt.xlabel('x (km)')
+        # plt.ylabel('y (km)')
+        # ax.set_aspect(1)
+        # cbar = plt.colorbar()
+        # cbar.set_label('curl $\\tau$')
+        # plt.show()
             
  
 def curl_tau(x,y,W,L,tau_0):
-    return -((tau_0*2*np.pi)/L)*np.sin((2*np.pi*y)/L)
+    return ((tau_0*2*np.pi)/L)*np.sin((2*np.pi*y)/L) 
          
 
-test_gyre = Gyre(beta=2e-11, rho_0=1000, H=1000, curl_tau=curl_tau, tau_0=1, r=2e-7, W=10**6, L=10**6, n=100, m=100)
+test_gyre = Gyre(beta=2e-11, rho_0=1000, H=1000, curl_tau=curl_tau, tau_0=1, r=2e-7, W=10**6, L=10**6, n=50, m=50)
 test_gyre.solve('BC')
+# plt.savefig("tau=default BC=periodic.png")
+plt.show()
 
 
 
