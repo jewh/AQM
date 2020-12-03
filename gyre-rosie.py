@@ -112,7 +112,9 @@ class Gyre:
     
         
         fig,ax = plt.subplots()
-        plt.contourf(y,x,sol_matrix)
+        plt.contour(y,x,sol_matrix, cmap='RdBu')
+        ax.quiver(700,730,0,10)
+        ax.quiver(700,230,0,-10)
         plt.xlabel('x (km)')
         plt.ylabel('y (km)')
         ax.set_aspect(1)
@@ -146,7 +148,7 @@ class Gyre:
 def curl_tau(x,y,W,L,tau_0):
     return -((tau_0*2*np.pi)/L)*np.sin((2*np.pi*y)/L)
          
-test_gyre = Gyre(2e-11, 1000, 1000, curl_tau, 1, 1e-6, 10**6, 10**6, 100, 100)
+test_gyre = Gyre(2e-11, 1000, 1000, curl_tau, 1, 1e-6, 10**6, 10**6, 50, 50)
 test_gyre.solve('BC')
 
 
